@@ -1,0 +1,23 @@
+name: CratesExplorer
+main: eu.horyzon.cratesexplorer.CratesExplorer
+version: 1.0
+description: CratesExplorer chest plugin!
+author: LLIcocoman_Hrz
+website: http://horyzon.eu
+depend: [CurrencyDispenser]
+
+commands:
+  cratesexplorer:
+    aliases: [explorer, explo, ex, lb, crates]
+    description: Spawn special chest
+    permission: cratesexplorer.command
+
+permissions:
+  cratesexplorer.*:
+    description: Allows access to everything
+    default: op
+    children:
+      cratesexplorer.command: true
+  cratesexplorer.command:
+    description: Allow you to start special chest spawn
+    default: op
