@@ -4,12 +4,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.meta.FireworkMeta;
 
 public abstract class Reward {
-	protected int multiplicator;
+	protected int pourcent;
 	protected double amount;
 	protected FireworkMeta firework;
 
-	public int getMultiplicator() {
-		return multiplicator;
+	public int getPourcent() {
+		return pourcent;
 	}
 
 	public double getAmount() {
