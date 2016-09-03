@@ -84,7 +84,7 @@ public class ConfigManager extends YamlConfiguration {
 	}
 
 	public void loadArmorstands() {
-
+		
 	}
 
 	public TreeSet<Reward> loadRewards() {
