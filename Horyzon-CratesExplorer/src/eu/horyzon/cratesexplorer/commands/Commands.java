@@ -9,7 +9,6 @@ import org.bukkit.entity.Player;
 
 import eu.horyzon.cratesexplorer.CratesExplorer;
 import eu.horyzon.cratesexplorer.objects.cratestype.Crates;
-import eu.horyzon.cratesexplorer.tasks.SpawnTask;
 import net.md_5.bungee.api.ChatColor;
 
 public class Commands implements CommandExecutor {
@@ -18,18 +17,18 @@ public class Commands implements CommandExecutor {
 		if (args.length == 1) {
 			if (args[0].equalsIgnoreCase("info")) {
 				s.sendMessage(ChatColor.GOLD + "---====== Chest info ======---");
-				for (Crates showCase : CratesExplorer.showCases) {
+				for (Crates crates : Crates.cratesList) {
 					int spawned = 0;
-					int size = showCase.getShowCase().size();
-					Set<?> cases = showCase.getShowCase();
+					int size = crates.getCrates().size();
+					Set<Object> cases = crates.getCrates();
 
 					for (Object c : cases) {
-						if (showCase.isShowCase(c))
+						if (crates.isCrates(c))
 							spawned++;
 					}
 
-					s.sendMessage(ChatColor.GOLD + "  " + showCase.getId() + ":");
-					s.sendMessage(ChatColor.GOLD + "    Material: " + showCase.getMaterial().name());
+					s.sendMessage(ChatColor.GOLD + "  " + crates.getId() + ":");
+					s.sendMessage(ChatColor.GOLD + "    Material: " + crates.getMaterial().name());
 					s.sendMessage(ChatColor.GOLD + "    Amount:");
 					s.sendMessage(ChatColor.GREEN + "      Spawned: " + spawned);
 					s.sendMessage(ChatColor.RED + "      Not spawned: " + (size - spawned));
@@ -57,17 +56,12 @@ public class Commands implements CommandExecutor {
 		} else if (args.length == 2) {
 			if (args[0].equalsIgnoreCase("respawn")) {
 				if (args[1].equalsIgnoreCase("all")) {
-					for (Crates showCase : CratesExplorer.showCases) {
-						showCase.unspawnShowCase();
-						showCase.spawnRandomShowCase();
-					}
+					for (Crates crate : Crates.cratesList)
+						crate.respawnCrates();
 				} else {
-					Crates showCase = Crates.getShowCase(args[1]);
-
-					if (showCase != null) {
-						showCase.unspawnShowCase();
-						showCase.spawnRandomShowCase();
-					} else {
+					try {
+						Crates.getCrates(args[1]).respawnCrates();
+					} catch (IllegalArgumentException e) {
 						s.sendMessage(ChatColor.RED + "Can't find showCase!");
 					}
 				}
@@ -75,49 +69,45 @@ public class Commands implements CommandExecutor {
 				return true;
 			} else if (args[1].equalsIgnoreCase("start")) {
 				if (args[1].equalsIgnoreCase("all")) {
-					for (SpawnTask task : CratesExplorer.tasks.values()) {
-						if (!task.isRun())
-							task.start();
+					for (Crates crate : Crates.cratesList) {
+						if (!crate.isRun())
+							crate.start();
 					}
 				} else {
-					SpawnTask task = CratesExplorer.tasks.get(args[1]);
+					try {
+						Crates crate = Crates.getCrates(args[1]);
 
-					if (task != null && !task.isRun())
-						task.start();
+						if (!crate.isRun())
+							crate.start();
+					} catch (IllegalArgumentException e) {
+						s.sendMessage(ChatColor.RED + "Can't find showCase!");
+					}
 				}
 
 				return true;
 			} else if (args[1].equalsIgnoreCase("stop")) {
 				if (args[1].equalsIgnoreCase("all")) {
-					for (Crates showCase : CratesExplorer.showCases) {
-						showCase.unspawnShowCase();
-						showCase.spawnRandomShowCase();
-					}
+					for (Crates crate : Crates.cratesList)
+						crate.respawnCrates();
 				} else {
-					Crates showCase = Crates.getShowCase(args[1]);
-
-					if (showCase != null) {
-						showCase.unspawnShowCase();
-						showCase.spawnRandomShowCase();
-					} else
+					try {
+						Crates.getCrates(args[1]).respawnCrates();
+					} catch (IllegalArgumentException e) {
 						s.sendMessage(ChatColor.RED + "Can't find showCase!");
+					}
 				}
 
 				return true;
 			} else if (args[1].equalsIgnoreCase("restart")) {
 				if (args[1].equalsIgnoreCase("all")) {
-					for (Crates showCase : CratesExplorer.showCases) {
-						showCase.unspawnShowCase();
-						showCase.spawnRandomShowCase();
-					}
+					for (Crates crate : Crates.cratesList)
+						crate.respawnCrates();
 				} else {
-					Crates showCase = Crates.getShowCase(args[1]);
-
-					if (showCase != null) {
-						showCase.unspawnShowCase();
-						showCase.spawnRandomShowCase();
-					} else
+					try {
+						Crates.getCrates(args[1]).respawnCrates();
+					} catch (IllegalArgumentException e) {
 						s.sendMessage(ChatColor.RED + "Can't find showCase!");
+					}
 				}
 
 				return true;
@@ -127,33 +117,30 @@ public class Commands implements CommandExecutor {
 					return false;
 				}
 
-				Player p = (Player) s;
-				Crates showCase = Crates.getShowCase(args[1]);
+				try {
+					Player p = (Player) s;
+					Crates crate = Crates.getCrates(args[1]);
 
-				if (showCase == null) {
-					p.sendMessage(ChatColor.RED + "Can't find this ShowCase!");
-					return false;
+					if (CratesExplorer.modify.containsKey(p.getUniqueId()))
+						CratesExplorer.modify.put(p.getUniqueId(), crate.getId());
+					else
+						CratesExplorer.modify.replace(p.getUniqueId(), crate.getId());
+					p.sendMessage(ChatColor.GREEN + "Modify mode enabled for " + crate.getId());
+				} catch (IllegalArgumentException e) {
+					s.sendMessage(ChatColor.RED + "Can't find showCase!");
 				}
-
-				if (CratesExplorer.modify.containsKey(p.getUniqueId()))
-					CratesExplorer.modify.put(p.getUniqueId(), args[1]);
-				else
-					CratesExplorer.modify.replace(p.getUniqueId(), args[1]);
-				p.sendMessage(ChatColor.GREEN + "Modify mode enabled for " + args[1]);
 
 				return true;
 			} else if (args[0].equalsIgnoreCase("unspawn")) {
-				if(args[1].equalsIgnoreCase("all")) {
-					for (Crates showCase : CratesExplorer.showCases) {
-						showCase.unspawnShowCase();
-					}
+				if (args[1].equalsIgnoreCase("all")) {
+					for (Crates crate : Crates.cratesList)
+						crate.unspawnCrates();
 				} else {
-					Crates showCase = Crates.getShowCase(args[1]);
-
-					if (showCase == null)
-						s.sendMessage(ChatColor.RED + "Can't find this ShowCase!");
-					else
-						showCase.unspawnShowCase();
+					try {
+						Crates.getCrates(args[1]).unspawnCrates();
+					} catch (IllegalArgumentException e) {
+						s.sendMessage(ChatColor.RED + "Can't find showCase!");
+					}
 				}
 
 				return true;
@@ -161,36 +148,35 @@ public class Commands implements CommandExecutor {
 		} else if (args.length == 3) {
 			if (args[0].equalsIgnoreCase("spawn")) {
 				if (args[1].equalsIgnoreCase("all")) {
-					if(args[2].equalsIgnoreCase("all")) {
-						for(Crates showCase : CratesExplorer.showCases)
-							showCase.spawnAllShowCase();
+					if (args[2].equalsIgnoreCase("all")) {
+						for (Crates crate : Crates.cratesList)
+							crate.spawnAllCrates();
 					} else {
-						int amount;
-
 						try {
-			                amount = Integer.parseInt(args[2]);
-			            } catch (NumberFormatException e) {
-			                s.sendMessage(ChatColor.RED + args[1] + " isn't a number!");
-			                return false;
-			            }
+							int amount = Integer.parseInt(args[2]);
 
-						for(Crates showCase : CratesExplorer.showCases) {
-							showCase.spawnShowCase(amount);
+							for (Crates crate : Crates.cratesList)
+								crate.spawnCrates(amount);
+						} catch (NumberFormatException e) {
+							s.sendMessage(ChatColor.RED + args[1] + " isn't a number!");
 						}
 					}
 				} else {
-					Crates showCase = Crates.getShowCase(args[1]);
+					try {
+						Crates crate = Crates.getCrates(args[1]);
 
-					if (showCase == null)
+						if (args[2].equalsIgnoreCase("all")) {
+							crate.spawnAllCrates();
+							;
+						} else {
+							try {
+								crate.spawnCrates(Integer.parseInt(args[1]));
+							} catch (NumberFormatException e) {
+								s.sendMessage(ChatColor.RED + args[1] + " n'est pas un nombre!");
+							}
+						}
+					} catch (NumberFormatException e) {
 						s.sendMessage(ChatColor.RED + "Can't find this ShowCase!");
-					if(args[2].equalsIgnoreCase("all")) {
-						showCase.spawnAllShowCase();
-					} else {
-						try {
-			                showCase.spawnShowCase(Integer.parseInt(args[1]));
-			            } catch (NumberFormatException e) {
-			                s.sendMessage(ChatColor.RED + args[1] + " n'est pas un nombre!");
-			            }
 					}
 				}
 
@@ -202,8 +188,10 @@ public class Commands implements CommandExecutor {
 		s.sendMessage(ChatColor.YELLOW + "/" + label + " info" + ChatColor.GRAY + " Get showcase informations");
 		s.sendMessage(ChatColor.YELLOW + "/" + label + " modify {type}" + ChatColor.GRAY + " Add or remove showcase");
 		s.sendMessage(ChatColor.YELLOW + "/" + label + " [respawn] [all|type]" + ChatColor.GRAY + " Respawn showcase");
-		s.sendMessage(ChatColor.YELLOW + "/" + label + " [spawn|unspawn] [all|type] [all|amount]" + ChatColor.GRAY + " Spawn/unspawn showcase");
-		s.sendMessage(ChatColor.YELLOW + "/" + label + " [start|stop|restart] [all|type]" + ChatColor.GRAY + " Start/stop/restart showcase task");
+		s.sendMessage(ChatColor.YELLOW + "/" + label + " [spawn|unspawn] [all|type] [all|amount]" + ChatColor.GRAY
+				+ " Spawn/unspawn showcase");
+		s.sendMessage(ChatColor.YELLOW + "/" + label + " [start|stop|restart] [all|type]" + ChatColor.GRAY
+				+ " Start/stop/restart showcase task");
 		return false;
 	}
 }

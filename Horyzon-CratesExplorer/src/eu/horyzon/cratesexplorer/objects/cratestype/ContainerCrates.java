@@ -1,42 +1,60 @@
 package eu.horyzon.cratesexplorer.objects.cratestype;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.material.DirectionalContainer;
 
 import eu.horyzon.cratesexplorer.CratesExplorer;
 import eu.horyzon.cratesexplorer.objects.rewardstype.Reward;
 
 public class ContainerCrates extends Crates {
-	private TreeSet<BlockState> containers;
 
-	public ContainerCrates(String id, int repeat, int spanTime, double pourcentToSpawn, boolean firework,
-			boolean particleSpawn, TreeSet<BlockState> containers, TreeSet<Reward> rewards) {
+	public static File dir = new File(CratesExplorer.getInstance().getDataFolder(), "containers");
+
+	public ContainerCrates(String id, int useTime, int spawnTime, double pourcent, Effect effect,
+			Set<BlockState> containers, TreeSet<Reward> rewards) {
 		super.id = id;
-		super.repeat = repeat;
-		super.spanTime = spanTime;
-		super.pourcentToSpawn = pourcentToSpawn;
-		super.firework = firework;
-		super.particleSpawn = particleSpawn;
-		this.containers = containers;
+		super.useTime = useTime;
+		super.spawnTime = spawnTime;
+		super.pourcent = pourcent;
+		super.effect = effect;
 		super.rewards = rewards;
+		super.crates = new TreeSet<Object>(containers);
+
+		if (super.canRepeat())
+			super.repeat = new HashMap<UUID, Long>();
+
+		cratesList.add(this);
 	}
 
 	public boolean registerContainer(BlockState container) {
+		File crate = new File(dir, id);
+		YamlConfiguration config = YamlConfiguration.loadConfiguration(crate);
 		if (addContainer(container)) {
-			List<String> crates = CratesExplorer.getConfiguration().getStringList("showcase." + super.id + ".case");
+			List<String> crates = config.getStringList("crates");
 
 			crates.add(String.join(":", container.getWorld().getName(), Integer.toString(container.getX()),
 					Integer.toString(container.getY()), Integer.toString(container.getZ()),
 					((DirectionalContainer) container.getData()).getFacing().name()));
 
-			CratesExplorer.getConfiguration().set("showcase." + super.id + ".case", crates);
+			config.set("crates", crates);
+			try {
+				config.save(crate);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 
 			return true;
 		}
@@ -45,17 +63,17 @@ public class ContainerCrates extends Crates {
 	}
 
 	public boolean addContainer(BlockState container) {
-		return containers.add(container);
+		return crates.add(container);
 	}
 
 	@Override
-	public TreeSet<?> getCrates() {
-		return containers;
+	public TreeSet<Object> getCrates() {
+		return crates;
 	}
 
 	@Override
 	public Boolean isCrates(Object showCase) {
-		return containers.contains(showCase);
+		return crates.contains(showCase);
 	}
 
 	@Override
@@ -66,8 +84,8 @@ public class ContainerCrates extends Crates {
 
 	@Override
 	public void spawnCrates(int amount) {
-		TreeSet<BlockState> randomContainers = new TreeSet<BlockState>();
-		TreeSet<BlockState> copyContainers = new TreeSet<BlockState>(containers);
+		TreeSet<Object> randomContainers = new TreeSet<Object>();
+		TreeSet<Object> copyContainers = new TreeSet<Object>(crates);
 		Random r = new Random();
 		int i = 0;
 
@@ -85,33 +103,41 @@ public class ContainerCrates extends Crates {
 
 	@Override
 	public void spawnRandomCrates() {
-		spawnCrates((int) Math.round(super.pourcentToSpawn * containers.size()));
+		spawnCrates((int) Math.round(super.pourcent * crates.size()));
 	}
 
 	@Override
 	public void spawnAllCrates() {
-		spawnCrates(containers);
+		spawnCrates(crates);
 	}
 
 	@Override
 	public void unspawnCrates() {
-		for (BlockState block : containers) {
-			block.getBlock().setType(Material.AIR);
+		for (Object block : crates) {
+			((BlockState) block).getBlock().setType(Material.AIR);
 		}
 	}
 
-	public void spawnCrates(TreeSet<BlockState> blocks) {
+	public void spawnCrates(TreeSet<Object> blocks) {
 		// Play Animation
-		for (BlockState block : blocks) {
-			block.getLocation().getWorld().spigot().playEffect(block.getLocation().add(0.5, 0.5, 0.5), Effect.SMALL_SMOKE, 0, 0, 0.1F, 0.1F, 0.1F, 0.01F, 20, 20);;
+		if (super.hasEffect()) {
+			Bukkit.getServer().getScheduler().runTask(CratesExplorer.getInstance(), new Runnable() {
+				@Override
+				public void run() {
+					for (Object block : blocks) {
+						((BlockState) block).getLocation().getWorld().spigot().playEffect(((BlockState) block).getLocation().add(0.5, 0.5, 0.5),
+								effect, 0, 0, 0.1F, 0.1F, 0.1F, 0.01F, 20, 20);
+					}
+				}
+			});
 		}
 
 		// Spawn ShowCase
 		Bukkit.getServer().getScheduler().runTaskLater(CratesExplorer.getInstance(), new Runnable() {
 			@Override
 			public void run() {
-				for (BlockState block : blocks)
-					block.update(true);
+				for (Object block : blocks)
+					((BlockState) block).update(true);
 			}
 		}, 12);
 	}

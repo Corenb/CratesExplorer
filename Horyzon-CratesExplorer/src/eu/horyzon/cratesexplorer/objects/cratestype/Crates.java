@@ -1,26 +1,71 @@
 package eu.horyzon.cratesexplorer.objects.cratestype;
 
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 
+import org.bukkit.Effect;
 import org.bukkit.Material;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import eu.horyzon.cratesexplorer.CratesExplorer;
 import eu.horyzon.cratesexplorer.objects.rewardstype.Reward;
 
-public abstract class Crates {
+public abstract class Crates extends BukkitRunnable {
 	protected String id;
-	protected int spanTime, repeat;
-	protected double pourcentToSpawn;
-	protected boolean firework, particleSpawn;
+	protected int useTime, spawnTime;
+	protected double pourcent;
+	protected Effect effect;
 	protected Material material;
-	protected TreeSet<Reward> rewards = new TreeSet<Reward>();
+	protected TreeSet<Reward> rewards;
+	protected TreeSet<Object> crates;
+	protected Map<UUID, Long> repeat;
+	protected boolean run = false;
 
-	public static Crates getCrates(String id){
-		for(Crates showCase : CratesExplorer.showCases) {
-			if(showCase.id.equals(id))
-				return showCase;
+	public static Set<Crates> cratesList = new HashSet<Crates>();
+
+	@Override
+	public void run() {
+		unspawnCrates();
+		spawnRandomCrates();
+	}
+
+	public void start() {
+		run = true;
+		runTaskTimer(CratesExplorer.getInstance(), 0, spawnTime);
+	}
+
+	public void stop() {
+		run = false;
+		cancel();
+	}
+
+	public void restart() {
+		stop();
+		start();
+	}
+
+	public boolean isRun() {
+		return run;
+	}
+
+	public static Crates getCrates(String id) throws IllegalArgumentException {
+		for (Crates crate : cratesList) {
+			if (crate.id.equals(id))
+				return crate;
 		}
-		return null;
+
+		throw new IllegalArgumentException("No crates with this name");
+	}
+
+	public TreeSet<Object> getCrates() {
+		return crates;
+	}
+
+	public boolean hasEffect() {
+		return effect != null;
 	}
 
 	public String getId() {
@@ -28,7 +73,7 @@ public abstract class Crates {
 	}
 
 	public int getSpanTime() {
-		return spanTime;
+		return spawnTime;
 	}
 
 	public Material getMaterial() {
@@ -36,18 +81,17 @@ public abstract class Crates {
 	}
 
 	public double getPourcent() {
-		return pourcentToSpawn;
+		return pourcent;
 	}
 
-	public Boolean hasRepeat() {
-		return repeat > 0;
+	public Boolean canRepeat() {
+		return useTime != 0;
 	}
 
-	public int getRepeat() {
-		return repeat;
+	public void respawnCrates() {
+		unspawnCrates();
+		spawnRandomCrates();
 	}
-
-	public abstract TreeSet<?> getCrates();
 
 	public abstract Boolean isCrates(Object showCase);
 

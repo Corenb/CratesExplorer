@@ -1,12 +1,12 @@
 package eu.horyzon.cratesexplorer.objects.rewardstype;
 
+import org.bukkit.FireworkEffect;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.meta.FireworkMeta;
 
 public abstract class Reward {
 	protected int pourcent;
 	protected double amount;
-	protected FireworkMeta firework;
+	protected FireworkEffect firework;
 
 	public int getPourcent() {
 		return pourcent;
@@ -20,7 +20,7 @@ public abstract class Reward {
 		return firework != null;
 	}
 
-	public FireworkMeta getFirework() {
+	public FireworkEffect getFirework() {
 		return firework;
 	}
 
