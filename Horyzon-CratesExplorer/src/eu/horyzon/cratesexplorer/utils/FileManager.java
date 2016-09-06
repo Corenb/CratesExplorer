@@ -1,29 +1,23 @@
 package eu.horyzon.cratesexplorer.utils;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeSet;
 
 import org.bukkit.Effect;
 import org.bukkit.FireworkEffect;
+import org.bukkit.FireworkEffect.Builder;
+import org.bukkit.FireworkEffect.Type;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
-import org.bukkit.FireworkEffect.Builder;
-import org.bukkit.FireworkEffect.Type;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.material.DirectionalContainer;
 import org.bukkit.material.MaterialData;
-
-import com.google.common.io.ByteStreams;
 
 import eu.horyzon.cratesexplorer.CratesExplorer;
 import eu.horyzon.cratesexplorer.objects.cratestype.ContainerCrates;
@@ -46,7 +40,7 @@ public class FileManager extends YamlConfiguration {
 
 	public void setup() {
 		if (!(f.exists()) && f.mkdirs()) {
-			extractFile(new File(f, f.getName() + ".example"));
+			CratesExplorer.getInstance().saveResource(f.getPath() + ".example", false);
 		}
 
 		for (File c : f.listFiles(filter)) {
@@ -88,17 +82,6 @@ public class FileManager extends YamlConfiguration {
 			} else {
 				
 			}
-		}
-	}
-
-	private void extractFile(File f) {
-		try {
-			f.createNewFile();
-			InputStream inputStream = getClass().getResourceAsStream(f.getName());
-			OutputStream outputStream = new FileOutputStream(f);
-			ByteStreams.copy(inputStream, outputStream);
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
 
