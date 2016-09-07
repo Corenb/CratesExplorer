@@ -34,7 +34,7 @@ public class Commands implements CommandExecutor {
 					s.sendMessage(ChatColor.RED + "      Not spawned: " + (size - spawned));
 					s.sendMessage(ChatColor.YELLOW + "      Total: " + size);
 				}
-				s.sendMessage(ChatColor.GOLD + "      ================");
+				s.sendMessage(ChatColor.GOLD + "============================");
 
 				return true;
 			} else if (args[0].equalsIgnoreCase("modify")) {
@@ -184,7 +184,7 @@ public class Commands implements CommandExecutor {
 			}
 		}
 
-		s.sendMessage(ChatColor.YELLOW + "          ----==== LobbyExplorer ====----");
+		s.sendMessage(ChatColor.YELLOW + "---------========== LobbyExplorer =========---------");
 		s.sendMessage(ChatColor.YELLOW + "/" + label + " info" + ChatColor.GRAY + " Get showcase informations");
 		s.sendMessage(ChatColor.YELLOW + "/" + label + " modify {type}" + ChatColor.GRAY + " Add or remove showcase");
 		s.sendMessage(ChatColor.YELLOW + "/" + label + " [respawn] [all|type]" + ChatColor.GRAY + " Respawn showcase");

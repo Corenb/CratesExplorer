@@ -3,7 +3,6 @@ package eu.horyzon.cratesexplorer.objects.cratestype;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 
 import org.bukkit.Effect;
@@ -19,8 +18,8 @@ public abstract class Crates extends BukkitRunnable {
 	protected double pourcent;
 	protected Effect effect;
 	protected Material material;
-	protected TreeSet<Reward> rewards;
-	protected TreeSet<Object> crates;
+	protected Set<Reward> rewards;
+	protected Set<Object> crates;
 	protected Map<UUID, Long> repeat;
 	protected boolean run = false;
 
@@ -60,7 +59,7 @@ public abstract class Crates extends BukkitRunnable {
 		throw new IllegalArgumentException("No crates with this name");
 	}
 
-	public TreeSet<Object> getCrates() {
+	public Set<Object> getCrates() {
 		return crates;
 	}
 

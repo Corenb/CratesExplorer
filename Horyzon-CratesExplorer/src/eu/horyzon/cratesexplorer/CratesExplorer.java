@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import org.bukkit.configuration.Configuration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -20,7 +21,8 @@ public class CratesExplorer extends JavaPlugin {
 
 	public void onEnable() {
 		instance = this;
-		Configuration config = getConfig();
+		getConfig().options().copyDefaults(true);
+		saveDefaultConfig();
 
 		// INITIALIZE FILES
 		File[] dirs = (File[]) Arrays
@@ -30,8 +32,14 @@ public class CratesExplorer extends JavaPlugin {
 			new FileManager(dir).setup();
 		}
 
+		Configuration config = getConfig();
+
 		if (config.getBoolean("debug", false)) {
-			getCommand("lobbyexplorer").setExecutor(new Commands());
+			Logger log = getLogger();
+
+			log.info(Crates.cratesList.size() + " differents crates registered");
+
+			getCommand("cratesexplorer").setExecutor(new Commands());
 		}
 	}
 

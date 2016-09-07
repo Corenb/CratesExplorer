@@ -3,10 +3,10 @@ package eu.horyzon.cratesexplorer.objects.cratestype;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
@@ -23,15 +23,16 @@ public class ContainerCrates extends Crates {
 
 	public static File dir = new File(CratesExplorer.getInstance().getDataFolder(), "containers");
 
-	public ContainerCrates(String id, int useTime, int spawnTime, double pourcent, Effect effect,
-			Set<BlockState> containers, TreeSet<Reward> rewards) {
+	public ContainerCrates(String id, Material material, int useTime, int spawnTime, double pourcent, Effect effect,
+			Set<Object> containers, Set<Reward> rewards) {
 		super.id = id;
+		super.material = material;
 		super.useTime = useTime;
 		super.spawnTime = spawnTime;
 		super.pourcent = pourcent;
 		super.effect = effect;
 		super.rewards = rewards;
-		super.crates = new TreeSet<Object>(containers);
+		super.crates = containers;
 
 		if (super.canRepeat())
 			super.repeat = new HashMap<UUID, Long>();
@@ -67,7 +68,7 @@ public class ContainerCrates extends Crates {
 	}
 
 	@Override
-	public TreeSet<Object> getCrates() {
+	public Set<Object> getCrates() {
 		return crates;
 	}
 
@@ -84,8 +85,8 @@ public class ContainerCrates extends Crates {
 
 	@Override
 	public void spawnCrates(int amount) {
-		TreeSet<Object> randomContainers = new TreeSet<Object>();
-		TreeSet<Object> copyContainers = new TreeSet<Object>(crates);
+		Set<Object> randomContainers = new HashSet<Object>();
+		Set<Object> copyContainers = new HashSet<Object>(crates);
 		Random r = new Random();
 		int i = 0;
 
@@ -118,7 +119,7 @@ public class ContainerCrates extends Crates {
 		}
 	}
 
-	public void spawnCrates(TreeSet<Object> blocks) {
+	public void spawnCrates(Set<Object> blocks) {
 		// Play Animation
 		if (super.hasEffect()) {
 			Bukkit.getServer().getScheduler().runTask(CratesExplorer.getInstance(), new Runnable() {
