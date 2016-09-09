@@ -26,7 +26,7 @@ public class PlayerModify implements Listener {
 
 		if(modify.containsKey(p.getUniqueId())) {
 			Crates c = Crates.getCrates(modify.get(p.getUniqueId()));
-			if(!c.getMaterial().equals(e.getClickedBlock().getType()))
+			if(c.getMaterial().equals(e.getMaterial()))
 				return;
 
 			if(e.getAction().equals(Action.LEFT_CLICK_BLOCK)) {

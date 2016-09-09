@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.bukkit.Effect;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 
 import eu.horyzon.cratesexplorer.objects.rewardstype.Reward;
 
@@ -114,5 +115,5 @@ public abstract class Crates {
 
 	public abstract void unspawnCrates();
 
-	public abstract void playAnimation();
+	public abstract void playAnimation(Object crate, Player p);
 }

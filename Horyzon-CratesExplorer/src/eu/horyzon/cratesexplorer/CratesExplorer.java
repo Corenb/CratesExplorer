@@ -8,6 +8,7 @@ import org.bukkit.configuration.Configuration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import eu.horyzon.cratesexplorer.commands.Commands;
+import eu.horyzon.cratesexplorer.listeners.PlayerExplore;
 import eu.horyzon.cratesexplorer.listeners.PlayerModify;
 import eu.horyzon.cratesexplorer.objects.cratestype.Crates;
 import eu.horyzon.cratesexplorer.tasks.CrateTask;
@@ -42,6 +43,8 @@ public class CratesExplorer extends JavaPlugin {
 			getServer().getPluginManager().registerEvents(new PlayerModify(), this);
 		}
 
+		getServer().getPluginManager().registerEvents(new PlayerExplore(), this);
+
 		task = new CrateTask(this);
 	}
 
@@ -54,6 +57,8 @@ public class CratesExplorer extends JavaPlugin {
 			} catch (IllegalStateException e) {
 			}
 		}
+
+		Crates.cratesList.clear();
 	}
 
 	public static CratesExplorer getInstance() {

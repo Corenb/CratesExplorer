@@ -14,10 +14,9 @@ public class CrateTask extends BukkitRunnable {
 	@Override
 	public void run() {
 		long now = System.currentTimeMillis();
-		for(Crates crate : Crates.cratesList){
-			if(crate.isRun() && (now - crate.getLast())/1000 >= crate.getSpawnTime()) {
+		for (Crates crate : Crates.cratesList) {
+			if (crate.isRun() && (now - crate.getLast()) / 1000 >= crate.getSpawnTime())
 				crate.respawnCrates();
-			}
 		}
 	}
 

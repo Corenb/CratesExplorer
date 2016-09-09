@@ -183,9 +183,10 @@ public class Commands implements CommandExecutor {
 							;
 						} else {
 							try {
-								crate.spawnCrates(Integer.parseInt(args[1]));
+								crate.unspawnCrates();
+								crate.spawnCrates(Integer.parseInt(args[2]));
 							} catch (NumberFormatException e) {
-								s.sendMessage(ChatColor.RED + args[1] + " n'est pas un nombre!");
+								s.sendMessage(ChatColor.RED + args[2] + " n'est pas un nombre!");
 							}
 						}
 					} catch (NumberFormatException e) {
@@ -200,9 +201,9 @@ public class Commands implements CommandExecutor {
 		s.sendMessage(ChatColor.YELLOW + "---------========== LobbyExplorer =========---------");
 		s.sendMessage(ChatColor.YELLOW + "/" + label + " info" + ChatColor.GRAY + " Get showcase informations");
 		s.sendMessage(ChatColor.YELLOW + "/" + label + " modify {type}" + ChatColor.GRAY + " Add or remove showcase");
-		s.sendMessage(ChatColor.YELLOW + "/" + label + " [respawn] [all|type]" + ChatColor.GRAY + " Respawn showcase");
-		s.sendMessage(ChatColor.YELLOW + "/" + label + " [spawn|unspawn] [all|type] [all|amount]" + ChatColor.GRAY
-				+ " Spawn/unspawn showcase");
+		s.sendMessage(ChatColor.YELLOW + "/" + label + " [respawn|unspawn] [all|type]" + ChatColor.GRAY + " Respawn/unspawn showcase");
+		s.sendMessage(ChatColor.YELLOW + "/" + label + " [spawn] [all|type] [all|amount]" + ChatColor.GRAY
+				+ " Spawn showcase");
 		s.sendMessage(ChatColor.YELLOW + "/" + label + " [start|stop|restart] [all|type]" + ChatColor.GRAY
 				+ " Start/stop/restart showcase task");
 		return false;

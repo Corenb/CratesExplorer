@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
+import org.bukkit.entity.Player;
 import org.bukkit.material.DirectionalContainer;
 
 import eu.horyzon.cratesexplorer.CratesExplorer;
@@ -18,7 +19,6 @@ import eu.horyzon.cratesexplorer.objects.rewardstype.Reward;
 import eu.horyzon.cratesexplorer.utils.FileManager;
 
 public class ContainerCrates extends Crates {
-
 	public static File dir = new File(CratesExplorer.getInstance().getDataFolder(), "containers");
 
 	public ContainerCrates(String id, Material material, int useTime, int spawnTime, double pourcent, Effect effect,
@@ -49,12 +49,6 @@ public class ContainerCrates extends Crates {
 		return added;
 	}
 
-	private static String parseLoc(BlockState container) {
-		return String.join(":", container.getWorld().getName(), Integer.toString(container.getX()),
-				Integer.toString(container.getY()), Integer.toString(container.getZ()),
-				((DirectionalContainer) container.getData()).getFacing().name());
-	}
-
 	@Override
 	public boolean removeCrate(Object crate) {
 		boolean removed = crates.remove(crate);
@@ -63,6 +57,12 @@ public class ContainerCrates extends Crates {
 			FileManager.removeLocation(new File(dir, id), parseLoc((BlockState) crate));
 
 		return removed;
+	}
+
+	private static String parseLoc(BlockState container) {
+		return String.join(":", container.getWorld().getName(), Integer.toString(container.getX()),
+				Integer.toString(container.getY()), Integer.toString(container.getZ()),
+				((DirectionalContainer) container.getData()).getFacing().name());
 	}
 
 	@Override
@@ -78,7 +78,7 @@ public class ContainerCrates extends Crates {
 	}
 
 	@Override
-	public void playAnimation() {
+	public void playAnimation(Object crate, Player p) {
 		// TODO Stub de la méthode généré automatiquement
 
 	}
