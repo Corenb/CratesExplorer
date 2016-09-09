@@ -7,7 +7,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import eu.horyzon.cratesexplorer.CratesExplorer;
+import eu.horyzon.cratesexplorer.listeners.PlayerModify;
 import eu.horyzon.cratesexplorer.objects.cratestype.Crates;
 import net.md_5.bungee.api.ChatColor;
 
@@ -23,7 +23,7 @@ public class Commands implements CommandExecutor {
 					Set<Object> cases = crates.getCrates();
 
 					for (Object c : cases) {
-						if (crates.isCrates(c))
+						if (crates.isSpawned(c))
 							spawned++;
 					}
 
@@ -45,8 +45,8 @@ public class Commands implements CommandExecutor {
 
 				Player p = (Player) s;
 
-				if (CratesExplorer.modify.containsKey(p.getUniqueId())) {
-					CratesExplorer.modify.remove(p.getUniqueId());
+				if (PlayerModify.modify.containsKey(p.getUniqueId())) {
+					Crates.getCrates(PlayerModify.modify.remove(p.getUniqueId())).start();
 					p.sendMessage(ChatColor.RED + "Modify mode disabled");
 				} else
 					p.sendMessage(ChatColor.RED + "You're not in modify mode!");
@@ -67,46 +67,58 @@ public class Commands implements CommandExecutor {
 				}
 
 				return true;
-			} else if (args[1].equalsIgnoreCase("start")) {
+			} else if (args[0].equalsIgnoreCase("start")) {
 				if (args[1].equalsIgnoreCase("all")) {
 					for (Crates crate : Crates.cratesList) {
-						if (!crate.isRun())
+						try {
 							crate.start();
+						} catch (IllegalStateException e) {
+						}
 					}
 				} else {
 					try {
-						Crates crate = Crates.getCrates(args[1]);
-
-						if (!crate.isRun())
-							crate.start();
+						Crates.getCrates(args[1]).start();
 					} catch (IllegalArgumentException e) {
 						s.sendMessage(ChatColor.RED + "Can't find showCase!");
+					} catch (IllegalStateException e) {
+						s.sendMessage(ChatColor.RED + "Task already started!");
 					}
 				}
 
 				return true;
-			} else if (args[1].equalsIgnoreCase("stop")) {
+			} else if (args[0].equalsIgnoreCase("stop")) {
 				if (args[1].equalsIgnoreCase("all")) {
-					for (Crates crate : Crates.cratesList)
-						crate.respawnCrates();
+					for (Crates crate : Crates.cratesList) {
+						try {
+							crate.stop();
+						} catch (IllegalStateException e) {
+						}
+					}
 				} else {
 					try {
-						Crates.getCrates(args[1]).respawnCrates();
+						Crates.getCrates(args[1]).stop();
 					} catch (IllegalArgumentException e) {
 						s.sendMessage(ChatColor.RED + "Can't find showCase!");
+					} catch (IllegalStateException e) {
+						s.sendMessage(ChatColor.RED + "Task already stoped!");
 					}
 				}
 
 				return true;
-			} else if (args[1].equalsIgnoreCase("restart")) {
+			} else if (args[0].equalsIgnoreCase("restart")) {
 				if (args[1].equalsIgnoreCase("all")) {
-					for (Crates crate : Crates.cratesList)
-						crate.respawnCrates();
+					for (Crates crate : Crates.cratesList) {
+						try {
+							crate.restart();
+						} catch (IllegalStateException e) {
+						}
+					}
 				} else {
 					try {
-						Crates.getCrates(args[1]).respawnCrates();
+						Crates.getCrates(args[1]).restart();
 					} catch (IllegalArgumentException e) {
 						s.sendMessage(ChatColor.RED + "Can't find showCase!");
+					} catch (IllegalStateException e) {
 					}
 				}
 
@@ -121,10 +133,11 @@ public class Commands implements CommandExecutor {
 					Player p = (Player) s;
 					Crates crate = Crates.getCrates(args[1]);
 
-					if (CratesExplorer.modify.containsKey(p.getUniqueId()))
-						CratesExplorer.modify.put(p.getUniqueId(), crate.getId());
-					else
-						CratesExplorer.modify.replace(p.getUniqueId(), crate.getId());
+					try {
+						Crates.getCrates(PlayerModify.modify.put(p.getUniqueId(), crate.getId())).start();
+					} catch (IllegalArgumentException e) {
+					}
+					crate.stop();
 					p.sendMessage(ChatColor.GREEN + "Modify mode enabled for " + crate.getId());
 				} catch (IllegalArgumentException e) {
 					s.sendMessage(ChatColor.RED + "Can't find showCase!");

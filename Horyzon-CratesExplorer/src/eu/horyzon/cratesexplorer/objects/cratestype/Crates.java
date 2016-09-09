@@ -7,15 +7,14 @@ import java.util.UUID;
 
 import org.bukkit.Effect;
 import org.bukkit.Material;
-import org.bukkit.scheduler.BukkitRunnable;
 
-import eu.horyzon.cratesexplorer.CratesExplorer;
 import eu.horyzon.cratesexplorer.objects.rewardstype.Reward;
 
-public abstract class Crates extends BukkitRunnable {
+public abstract class Crates {
 	protected String id;
 	protected int useTime, spawnTime;
 	protected double pourcent;
+	protected long last;
 	protected Effect effect;
 	protected Material material;
 	protected Set<Reward> rewards;
@@ -25,29 +24,33 @@ public abstract class Crates extends BukkitRunnable {
 
 	public static Set<Crates> cratesList = new HashSet<Crates>();
 
-	@Override
-	public void run() {
-		unspawnCrates();
-		spawnRandomCrates();
-	}
+	public void start() throws IllegalStateException {
+		if (run)
+			throw new IllegalStateException("Task already started");
 
-	public void start() {
 		run = true;
-		runTaskTimer(CratesExplorer.getInstance(), 0, spawnTime);
+		respawnCrates();
 	}
 
-	public void stop() {
+	public void stop() throws IllegalStateException {
+		if (!run)
+			throw new IllegalStateException("Task already stopped");
+
 		run = false;
-		cancel();
+		spawnAllCrates();
 	}
 
-	public void restart() {
+	public void restart() throws IllegalStateException {
 		stop();
 		start();
 	}
 
 	public boolean isRun() {
 		return run;
+	}
+
+	public long getLast() {
+		return last;
 	}
 
 	public static Crates getCrates(String id) throws IllegalArgumentException {
@@ -71,7 +74,7 @@ public abstract class Crates extends BukkitRunnable {
 		return id;
 	}
 
-	public int getSpanTime() {
+	public int getSpawnTime() {
 		return spawnTime;
 	}
 
@@ -90,9 +93,18 @@ public abstract class Crates extends BukkitRunnable {
 	public void respawnCrates() {
 		unspawnCrates();
 		spawnRandomCrates();
+		last = System.currentTimeMillis();
 	}
 
-	public abstract Boolean isCrates(Object showCase);
+	public Boolean isCrates(Object crate) {
+		return crates.contains(crate);
+	}
+
+	public abstract boolean addCrate(Object crate);
+
+	public abstract boolean removeCrate(Object crate);
+
+	public abstract Boolean isSpawned(Object crate);
 
 	public abstract void spawnCrates(int amount);
 

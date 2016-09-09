@@ -2,8 +2,10 @@ package eu.horyzon.cratesexplorer.utils;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -77,7 +79,8 @@ public class FileManager {
 					}
 				}
 
-				new ContainerCrates(c.getName(), material, useTime, spawnTime, pourcentSpawn, effect, new HashSet<Object>(crates), rewards);
+				new ContainerCrates(c.getName(), material, useTime, spawnTime, pourcentSpawn, effect,
+						new HashSet<Object>(crates), rewards);
 			} else {
 
 			}
@@ -134,5 +137,29 @@ public class FileManager {
 		}
 
 		return fireworks;
+	}
+
+	public static void addLocation(File f, String loc) {
+		YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
+		List<String> locList = config.getStringList("crates");
+
+		locList.add(loc);
+		config.set("crates", locList);
+		try {
+			config.save(f);
+		} catch (IOException e) {
+		}
+	}
+
+	public static void removeLocation(File f, String loc) {
+		YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
+		List<String> locList = config.getStringList("crates");
+
+		locList.remove(loc);
+		config.set("crates", locList);
+		try {
+			config.save(f);
+		} catch (IOException e) {
+		}
 	}
 }

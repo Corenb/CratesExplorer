@@ -1,10 +1,8 @@
 package eu.horyzon.cratesexplorer.objects.cratestype;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
@@ -13,11 +11,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.material.DirectionalContainer;
 
 import eu.horyzon.cratesexplorer.CratesExplorer;
 import eu.horyzon.cratesexplorer.objects.rewardstype.Reward;
+import eu.horyzon.cratesexplorer.utils.FileManager;
 
 public class ContainerCrates extends Crates {
 
@@ -37,34 +35,34 @@ public class ContainerCrates extends Crates {
 		if (super.canRepeat())
 			super.repeat = new HashMap<UUID, Long>();
 
+		start();
 		cratesList.add(this);
 	}
 
-	public boolean registerContainer(BlockState container) {
-		File crate = new File(dir, id);
-		YamlConfiguration config = YamlConfiguration.loadConfiguration(crate);
-		if (addContainer(container)) {
-			List<String> crates = config.getStringList("crates");
+	@Override
+	public boolean addCrate(Object crate) {
+		boolean added = crates.add(crate);
 
-			crates.add(String.join(":", container.getWorld().getName(), Integer.toString(container.getX()),
-					Integer.toString(container.getY()), Integer.toString(container.getZ()),
-					((DirectionalContainer) container.getData()).getFacing().name()));
+		if (added)
+			FileManager.addLocation(new File(dir, id), parseLoc(((BlockState) crate)));
 
-			config.set("crates", crates);
-			try {
-				config.save(crate);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-
-			return true;
-		}
-
-		return false;
+		return added;
 	}
 
-	public boolean addContainer(BlockState container) {
-		return crates.add(container);
+	private static String parseLoc(BlockState container) {
+		return String.join(":", container.getWorld().getName(), Integer.toString(container.getX()),
+				Integer.toString(container.getY()), Integer.toString(container.getZ()),
+				((DirectionalContainer) container.getData()).getFacing().name());
+	}
+
+	@Override
+	public boolean removeCrate(Object crate) {
+		boolean removed = crates.remove(crate);
+
+		if (removed)
+			FileManager.removeLocation(new File(dir, id), parseLoc((BlockState) crate));
+
+		return removed;
 	}
 
 	@Override
@@ -73,8 +71,10 @@ public class ContainerCrates extends Crates {
 	}
 
 	@Override
-	public Boolean isCrates(Object showCase) {
-		return crates.contains(showCase);
+	public Boolean isSpawned(Object crate) {
+		BlockState c = (BlockState) crate;
+
+		return c.equals(c.getBlock().getState());
 	}
 
 	@Override
@@ -126,8 +126,9 @@ public class ContainerCrates extends Crates {
 				@Override
 				public void run() {
 					for (Object block : blocks) {
-						((BlockState) block).getLocation().getWorld().spigot().playEffect(((BlockState) block).getLocation().add(0.5, 0.5, 0.5),
-								effect, 0, 0, 0.1F, 0.1F, 0.1F, 0.01F, 20, 20);
+						((BlockState) block).getLocation().getWorld().spigot().playEffect(
+								((BlockState) block).getLocation().add(0.5, 0.5, 0.5), effect, 0, 0, 0.1F, 0.1F, 0.1F,
+								0.01F, 20, 20);
 					}
 				}
 			});

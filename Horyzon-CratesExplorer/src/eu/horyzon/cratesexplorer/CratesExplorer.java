@@ -2,22 +2,20 @@ package eu.horyzon.cratesexplorer;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 import org.bukkit.configuration.Configuration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import eu.horyzon.cratesexplorer.commands.Commands;
+import eu.horyzon.cratesexplorer.listeners.PlayerModify;
 import eu.horyzon.cratesexplorer.objects.cratestype.Crates;
+import eu.horyzon.cratesexplorer.tasks.CrateTask;
 import eu.horyzon.cratesexplorer.utils.FileManager;
 
 public class CratesExplorer extends JavaPlugin {
+	public static CrateTask task;
 	private static CratesExplorer instance;
-
-	public static Map<UUID, String> modify = new HashMap<UUID, String>();
 
 	public void onEnable() {
 		instance = this;
@@ -40,13 +38,21 @@ public class CratesExplorer extends JavaPlugin {
 			log.info(Crates.cratesList.size() + " differents crates registered");
 
 			getCommand("cratesexplorer").setExecutor(new Commands());
+
+			getServer().getPluginManager().registerEvents(new PlayerModify(), this);
 		}
+
+		task = new CrateTask(this);
 	}
 
 	public void onDisable() {
+		task.cancel();
+
 		for (Crates crate : Crates.cratesList) {
-			crate.stop();
-			crate.unspawnCrates();
+			try {
+				crate.stop();
+			} catch (IllegalStateException e) {
+			}
 		}
 	}
 
