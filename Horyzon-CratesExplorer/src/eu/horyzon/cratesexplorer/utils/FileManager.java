@@ -15,6 +15,7 @@ import org.bukkit.FireworkEffect.Builder;
 import org.bukkit.FireworkEffect.Type;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -51,8 +52,14 @@ public class FileManager {
 			int useTime = config.getInt("useTime");
 			int spawnTime = config.getInt("spawnTime");
 			double pourcentSpawn = config.getDouble("pourcentSpawn");
-			Effect effect = config.isSet("effect") && !config.getString("effect").equalsIgnoreCase("none")
-					? Effect.valueOf(config.getString("effect").toUpperCase()) : null;
+			Effect effect = null;
+			Sound sound = null;
+
+			try {
+				effect = Effect.valueOf(config.getString("effect").toUpperCase());
+				sound = Sound.valueOf(config.getString("sound").toUpperCase());
+			} catch (NullPointerException e) {
+			}
 
 			Set<Reward> rewards = loadRewards(config);
 
@@ -64,8 +71,9 @@ public class FileManager {
 					Location loc = new Location(CratesExplorer.getInstance().getServer().getWorld(split[0]),
 							Double.parseDouble(split[1]), Double.parseDouble(split[2]), Double.parseDouble(split[3]));
 
+					loc.getBlock().setType(material);
+
 					BlockState state = loc.getBlock().getState();
-					state.setType(material);
 
 					if (state.getData() instanceof DirectionalContainer) {
 						MaterialData data = state.getData();
@@ -79,7 +87,7 @@ public class FileManager {
 					}
 				}
 
-				new ContainerCrates(c.getName(), material, useTime, spawnTime, pourcentSpawn, effect,
+				new ContainerCrates(c.getName(), material, useTime, spawnTime, pourcentSpawn, effect, sound,
 						new HashSet<Object>(crates), rewards);
 			} else {
 

@@ -9,31 +9,41 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.material.DirectionalContainer;
 
 import eu.horyzon.cratesexplorer.CratesExplorer;
+import eu.horyzon.cratesexplorer.listeners.PlayerExplore;
 import eu.horyzon.cratesexplorer.objects.rewardstype.Reward;
+import eu.horyzon.cratesexplorer.tasks.AnimArmorStand;
+import eu.horyzon.cratesexplorer.utils.ChestReflection;
 import eu.horyzon.cratesexplorer.utils.FileManager;
+import net.md_5.bungee.api.ChatColor;
 
 public class ContainerCrates extends Crates {
 	public static File dir = new File(CratesExplorer.getInstance().getDataFolder(), "containers");
 
 	public ContainerCrates(String id, Material material, int useTime, int spawnTime, double pourcent, Effect effect,
-			Set<Object> containers, Set<Reward> rewards) {
+			Sound sound, Set<Object> containers, Set<Reward> rewards) {
 		super.id = id;
 		super.material = material;
 		super.useTime = useTime;
 		super.spawnTime = spawnTime;
 		super.pourcent = pourcent;
 		super.effect = effect;
+		super.sound = sound;
 		super.rewards = rewards;
 		super.crates = containers;
 
-		if (super.canRepeat())
-			super.repeat = new HashMap<UUID, Long>();
+		if (useTime > 0)
+			repeat = new HashMap<UUID, Long>();
 
 		start();
 		cratesList.add(this);
@@ -79,8 +89,43 @@ public class ContainerCrates extends Crates {
 
 	@Override
 	public void playAnimation(Object crate, Player p) {
-		// TODO Stub de la méthode généré automatiquement
+		Block bloc = (Block) crate;
+		Reward reward = getReward();
 
+		if (sound != null)
+			p.playSound(bloc.getLocation(), sound, 20, 20);
+
+		ChestReflection.openChest(bloc, 30);
+		reward.giveReward(p);
+		ArmorStand as = createArmorStand(bloc, reward.getAmount());
+
+		CratesExplorer.getInstance().getServer().getScheduler().runTaskLater(CratesExplorer.getInstance(),
+				new Runnable() {
+					@Override
+					public void run() {
+						as.remove();
+						reward.playEffect(bloc.getLocation());
+
+						if (respawn()) {
+							unspawnCrate(bloc);
+							PlayerExplore.removeUse(bloc);
+						}
+					}
+				}, 60);
+	}
+
+	private ArmorStand createArmorStand(Block block, double gain) {
+		Location loc = block.getLocation().clone();
+		ArmorStand as = (ArmorStand) loc.getWorld().spawnEntity(loc.add(0.5, -1.75, 0.5), EntityType.ARMOR_STAND);
+
+		as.setCustomName(ChatColor.GOLD + "+ " + gain);
+		as.setCustomNameVisible(true);
+		as.setVisible(false);
+		as.setGravity(false);
+
+		new AnimArmorStand(as).runTaskTimerAsynchronously(CratesExplorer.getInstance(), 0, 1);
+
+		return as;
 	}
 
 	@Override
@@ -88,15 +133,12 @@ public class ContainerCrates extends Crates {
 		Set<Object> randomContainers = new HashSet<Object>();
 		Set<Object> copyContainers = new HashSet<Object>(crates);
 		Random r = new Random();
-		int i = 0;
 
-		while (i < amount && i <= copyContainers.size()) {
+		while (randomContainers.size() < amount && copyContainers.size() > 0) {
 			BlockState block = (BlockState) copyContainers.toArray()[r.nextInt(copyContainers.size())];
 
 			copyContainers.remove(block);
 			randomContainers.add(block);
-
-			i++;
 		}
 
 		spawnCrates(randomContainers);
@@ -115,20 +157,20 @@ public class ContainerCrates extends Crates {
 	@Override
 	public void unspawnCrates() {
 		for (Object block : crates) {
-			((BlockState) block).getBlock().setType(Material.AIR);
+			unspawnCrate(((BlockState) block).getBlock());
 		}
 	}
 
 	public void spawnCrates(Set<Object> blocks) {
 		// Play Animation
-		if (super.hasEffect()) {
-			Bukkit.getServer().getScheduler().runTask(CratesExplorer.getInstance(), new Runnable() {
+		if (hasEffect()) {
+			Bukkit.getServer().getScheduler().runTaskAsynchronously(CratesExplorer.getInstance(), new Runnable() {
 				@Override
 				public void run() {
 					for (Object block : blocks) {
 						((BlockState) block).getLocation().getWorld().spigot().playEffect(
-								((BlockState) block).getLocation().add(0.5, 0.5, 0.5), effect, 0, 0, 0.1F, 0.1F, 0.1F,
-								0.01F, 20, 20);
+								((BlockState) block).getLocation().add(0, 0.5, 0), effect, 0, 0, 0.1F, 0.1F, 0.1F,
+								0.5F, 20, 30);
 					}
 				}
 			});
@@ -142,5 +184,9 @@ public class ContainerCrates extends Crates {
 					((BlockState) block).update(true);
 			}
 		}, 12);
+	}
+
+	public void unspawnCrate(Block crate) {
+		crate.setType(Material.AIR);
 	}
 }

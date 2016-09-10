@@ -53,7 +53,7 @@ public class CratesExplorer extends JavaPlugin {
 
 		for (Crates crate : Crates.cratesList) {
 			try {
-				crate.stop();
+				crate.unspawnCrates();
 			} catch (IllegalStateException e) {
 			}
 		}

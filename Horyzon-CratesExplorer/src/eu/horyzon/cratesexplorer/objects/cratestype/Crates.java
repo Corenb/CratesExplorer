@@ -7,8 +7,10 @@ import java.util.UUID;
 
 import org.bukkit.Effect;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
+import eu.horyzon.cratesexplorer.listeners.PlayerModify;
 import eu.horyzon.cratesexplorer.objects.rewardstype.Reward;
 
 public abstract class Crates {
@@ -21,7 +23,9 @@ public abstract class Crates {
 	protected Set<Reward> rewards;
 	protected Set<Object> crates;
 	protected Map<UUID, Long> repeat;
+	protected Sound sound;
 	protected boolean run = false;
+	protected boolean unspawnAfterUse;
 
 	public static Set<Crates> cratesList = new HashSet<Crates>();
 
@@ -87,8 +91,12 @@ public abstract class Crates {
 		return pourcent;
 	}
 
-	public Boolean canRepeat() {
+	public Boolean canReUse() {
 		return useTime != 0;
+	}
+
+	public Boolean respawn() {
+		return useTime == -1;
 	}
 
 	public void respawnCrates() {
@@ -99,6 +107,30 @@ public abstract class Crates {
 
 	public Boolean isCrates(Object crate) {
 		return crates.contains(crate);
+	}
+
+	protected Reward getReward() throws NullPointerException {
+		int total = 0;
+
+		for (Reward reward : rewards) {
+			total += reward.getPourcent();
+		}
+
+		double random = Math.random() * total;
+		int index = 0;
+
+		for (Reward reward : rewards) {
+			index += reward.getPourcent();
+
+			if (random < index)
+				return reward;
+		}
+
+		throw new NullPointerException();
+	}
+
+	public boolean isModifyMode() {
+		return PlayerModify.modify.containsValue(id);
 	}
 
 	public abstract boolean addCrate(Object crate);
