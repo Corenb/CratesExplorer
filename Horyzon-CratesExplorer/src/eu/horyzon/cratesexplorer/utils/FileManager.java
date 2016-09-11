@@ -3,12 +3,14 @@ package eu.horyzon.cratesexplorer.utils;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.bukkit.Color;
 import org.bukkit.Effect;
 import org.bukkit.FireworkEffect;
 import org.bukkit.FireworkEffect.Builder;
@@ -23,6 +25,7 @@ import org.bukkit.material.DirectionalContainer;
 import org.bukkit.material.MaterialData;
 
 import eu.horyzon.cratesexplorer.CratesExplorer;
+import eu.horyzon.cratesexplorer.objects.cratestype.ArmorstandCrates;
 import eu.horyzon.cratesexplorer.objects.cratestype.ContainerCrates;
 import eu.horyzon.cratesexplorer.objects.rewardstype.CurrencyReward;
 import eu.horyzon.cratesexplorer.objects.rewardstype.Reward;
@@ -64,7 +67,7 @@ public class FileManager {
 			Set<Reward> rewards = loadRewards(config);
 
 			if (material.isBlock()) {
-				Set<BlockState> crates = new HashSet<BlockState>();
+				Set<Object> crates = new HashSet<Object>();
 
 				for (String locStr : config.getStringList("crates")) {
 					String[] split = locStr.split(":");
@@ -88,16 +91,17 @@ public class FileManager {
 				}
 
 				new ContainerCrates(c.getName(), material, useTime, spawnTime, pourcentSpawn, effect, sound,
-						new HashSet<Object>(crates), rewards);
-			} else {
+						crates, rewards);
+			} else if (material.equals(Material.ARMOR_STAND)){
+				Set<Object> armorstands = new HashSet<Object>(config.getList("crates"));
 
+				new ArmorstandCrates(c.getName(), material, useTime, spawnTime, pourcentSpawn, effect, sound, armorstands, rewards);
 			}
 		}
 	}
 
 	private Set<Reward> loadRewards(YamlConfiguration config) {
-		boolean fw = config.isSet("fireworks");
-		Map<String, FireworkEffect> fireworks = fw ? loadFirework(config) : null;
+		Map<String, FireworkEffect> fireworksList = loadFirework(config);
 		Set<Reward> rewards = new HashSet<Reward>();
 
 		for (String pourcent : config.getConfigurationSection("rewards").getKeys(false)) {
@@ -108,9 +112,13 @@ public class FileManager {
 				CurrencyManager currency = CurrencyManager.existCurrency(config.getString(path + "type"))
 						? CurrencyManager.getCurrency(config.getString(path + "type"))
 						: CurrencyManager.registerCurrency(config.getString(path + "type"));
-				FireworkEffect firework = fw ? fireworks.get(config.getString(path + "firework")) : null;
+				String[] fireworkNames = config.getString(path + "firework").split(":");
+				Set<FireworkEffect> fireworks = new HashSet<FireworkEffect>();
 
-				Reward reward = new CurrencyReward(currency, amount, pourcentage, firework);
+				for (String fireworkName : fireworkNames)
+					fireworks.add(fireworksList.get(fireworkName));
+
+				Reward reward = new CurrencyReward(currency, amount, pourcentage, fireworks);
 
 				rewards.add(reward);
 			} catch (IllegalArgumentException e) {
@@ -130,11 +138,11 @@ public class FileManager {
 			Builder fwb = FireworkEffect.builder();
 
 			for (String color : config.getString(path + "colors").split(",")) {
-				fwb.withColor(FireworkColors.valueOf(color).getColor());
+				fwb.withColor(Color.fromRGB(Integer.parseInt(color)));
 			}
 
 			for (String fade : config.getString(path + "fade").split(",")) {
-				fwb.withFade(FireworkColors.valueOf(fade.toUpperCase()).getColor());
+				fwb.withFade(Color.fromRGB(Integer.parseInt(fade)));
 			}
 
 			fwb.flicker(config.getBoolean(path + "flicker"));
@@ -147,11 +155,11 @@ public class FileManager {
 		return fireworks;
 	}
 
-	public static void addLocation(File f, String loc) {
+	public static void addLocation(File f, Object crate) {
 		YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
-		List<String> locList = config.getStringList("crates");
+		List<Object> locList = new ArrayList<Object>(config.getList("crates"));
 
-		locList.add(loc);
+		locList.add(crate.toString());
 		config.set("crates", locList);
 		try {
 			config.save(f);
@@ -159,11 +167,11 @@ public class FileManager {
 		}
 	}
 
-	public static void removeLocation(File f, String loc) {
+	public static void removeLocation(File f, Object crate) {
 		YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
-		List<String> locList = config.getStringList("crates");
+		List<Object> locList = new ArrayList<Object>(config.getList("crates"));
 
-		locList.remove(loc);
+		locList.remove(crate);
 		config.set("crates", locList);
 		try {
 			config.save(f);
