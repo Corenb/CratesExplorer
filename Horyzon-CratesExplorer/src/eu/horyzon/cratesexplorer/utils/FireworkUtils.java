@@ -10,7 +10,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Firework;
 import org.bukkit.inventory.meta.FireworkMeta;
 
-public class InstantFirework {
+public class FireworkUtils {
     /*
     * InstantFirework class made by TehHypnoz.
     *
@@ -25,7 +25,7 @@ public class InstantFirework {
     * new InstantFirework(fireworkEffect, location);
     */
 
-    public InstantFirework(Set<FireworkEffect> fireworkEffect, Location loc) {
+    public FireworkUtils(Set<FireworkEffect> fireworkEffect, Location loc) {
     	for(FireworkEffect fe : fireworkEffect) {
             Firework f = (Firework) loc.getWorld().spawn(loc, Firework.class);
             FireworkMeta fm = f.getFireworkMeta();

@@ -9,10 +9,7 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
-public class ChestReflection {
-	// Reference
-	// PacketPlayOutBlockAction packet = new PacketPlayOutBlockAction(new
-	// BlockPosition(x, y, z), BlockChest, 1, 1);
+public class ChestUtils {
 
 	private static Class<?> getNMSClass(String nmsClassString) throws ClassNotFoundException {
 		String version = Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3] + ".";
@@ -62,9 +59,6 @@ public class ChestReflection {
 				| InvocationTargetException | NoSuchMethodException | SecurityException | NoSuchFieldException e) {
 			e.printStackTrace();
 		}
-		// -this is the reference-
-		// new PacketPlayOutBlockAction(new BlockPosition(loc.getX(),
-		// loc.getY(), loc.getZ()), Blocks.CHEST, 1, 0);
 	}
 
 	public static void openChest(Block bloc, double radius) {

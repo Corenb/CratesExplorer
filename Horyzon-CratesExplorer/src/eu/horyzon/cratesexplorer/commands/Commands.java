@@ -17,18 +17,20 @@ public class Commands implements CommandExecutor {
 		if (args.length == 1) {
 			if (args[0].equalsIgnoreCase("info")) {
 				s.sendMessage(ChatColor.GOLD + "---====== Chest info ======---");
-				for (Crates crates : Crates.cratesList) {
+				for (Crates crate : Crates.cratesList) {
 					int spawned = 0;
-					int size = crates.getCrates().size();
-					Set<Object> cases = crates.getCrates();
+					int size = crate.getCrates().size();
+					Set<Object> cases = crate.getCrates();
 
 					for (Object c : cases) {
-						if (crates.isSpawned(c))
+						if (crate.isSpawned(c))
 							spawned++;
 					}
 
-					s.sendMessage(ChatColor.GOLD + "  " + crates.getId() + ":");
-					s.sendMessage(ChatColor.GOLD + "    Material: " + crates.getMaterial().name());
+					s.sendMessage(ChatColor.GOLD + "  " + crate.getId() + ":");
+					s.sendMessage(ChatColor.GOLD + "    Material: " + crate.getMaterial().name());
+					if(crate.respawn())
+						s.sendMessage(ChatColor.GOLD + "    Respawn:" + crate.getSpawnTime() + " seconds");
 					s.sendMessage(ChatColor.GOLD + "    Amount:");
 					s.sendMessage(ChatColor.GREEN + "      Spawned: " + spawned);
 					s.sendMessage(ChatColor.RED + "      Not spawned: " + (size - spawned));
@@ -46,7 +48,10 @@ public class Commands implements CommandExecutor {
 				Player p = (Player) s;
 
 				if (PlayerModify.modify.containsKey(p.getUniqueId())) {
-					Crates.getCrates(PlayerModify.modify.remove(p.getUniqueId())).start();
+					try {
+						Crates.getCrates(PlayerModify.modify.remove(p.getUniqueId())).start();
+					} catch (IllegalArgumentException | IllegalStateException e) {
+					}
 					p.sendMessage(ChatColor.RED + "Modify mode disabled");
 				} else
 					p.sendMessage(ChatColor.RED + "You're not in modify mode!");
@@ -135,9 +140,9 @@ public class Commands implements CommandExecutor {
 
 					try {
 						Crates.getCrates(PlayerModify.modify.put(p.getUniqueId(), crate.getId())).start();
-					} catch (IllegalArgumentException e) {
+						crate.stop();
+					} catch (IllegalStateException | IllegalArgumentException e) {
 					}
-					crate.stop();
 					p.sendMessage(ChatColor.GREEN + "Modify mode enabled for " + crate.getId());
 				} catch (IllegalArgumentException e) {
 					s.sendMessage(ChatColor.RED + "Can't find showCase!");

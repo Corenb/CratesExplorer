@@ -1,31 +1,23 @@
 package eu.horyzon.cratesexplorer.objects.cratestype;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Random;
 import java.util.Set;
-import java.util.UUID;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Effect;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.material.DirectionalContainer;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import eu.horyzon.cratesexplorer.CratesExplorer;
 import eu.horyzon.cratesexplorer.listeners.PlayerExplore;
 import eu.horyzon.cratesexplorer.objects.rewardstype.Reward;
-import eu.horyzon.cratesexplorer.tasks.AnimArmorStand;
-import eu.horyzon.cratesexplorer.utils.ChestReflection;
-import eu.horyzon.cratesexplorer.utils.FileManager;
-import net.md_5.bungee.api.ChatColor;
+import eu.horyzon.cratesexplorer.utils.AnimationUtils;
+import eu.horyzon.cratesexplorer.utils.ChestUtils;
+import eu.horyzon.cratesexplorer.utils.FileUtils;
 
 public class ContainerCrates extends Crates {
 	public static File dir = new File(CratesExplorer.getInstance().getDataFolder(), "containers");
@@ -42,10 +34,12 @@ public class ContainerCrates extends Crates {
 		super.rewards = rewards;
 		super.crates = containers;
 
-		if (useTime > 0)
-			repeat = new HashMap<UUID, Long>();
+		try {
+			start();
+		} catch (IllegalArgumentException e) {
+			spawnRandomCrates();
+		}
 
-		start();
 		cratesList.add(this);
 	}
 
@@ -54,7 +48,7 @@ public class ContainerCrates extends Crates {
 		boolean added = crates.add(crate);
 
 		if (added)
-			FileManager.addLocation(new File(dir, id), parseLoc(((BlockState) crate)));
+			FileUtils.addCrate(new File(dir, id), parseLoc(((BlockState) crate)));
 
 		return added;
 	}
@@ -64,7 +58,7 @@ public class ContainerCrates extends Crates {
 		boolean removed = crates.remove(crate);
 
 		if (removed)
-			FileManager.removeLocation(new File(dir, id), parseLoc((BlockState) crate));
+			FileUtils.removeCrate(new File(dir, id), parseLoc((BlockState) crate));
 
 		return removed;
 	}
@@ -81,10 +75,13 @@ public class ContainerCrates extends Crates {
 	}
 
 	@Override
-	public Boolean isSpawned(Object crate) {
-		BlockState c = (BlockState) crate;
+	public boolean isSpawned(Object crate) {
+		return ((BlockState) crate).equals(((BlockState) crate).getBlock().getState());
+	}
 
-		return c.equals(c.getBlock().getState());
+	@Override
+	public boolean isCrate(Object crate) {
+		return crates.contains(crate);
 	}
 
 	@Override
@@ -95,95 +92,53 @@ public class ContainerCrates extends Crates {
 		if (sound != null)
 			p.playSound(bloc.getLocation(), sound, 20, 20);
 
-		ChestReflection.openChest(bloc, 30);
+		ChestUtils.openChest(bloc, 30);
 		reward.giveReward(p);
-		ArmorStand as = createArmorStand(bloc, reward.getAmount());
+		AnimationUtils.createArmorStand(bloc.getLocation(), reward.getAmount());
 
-		CratesExplorer.getInstance().getServer().getScheduler().runTaskLater(CratesExplorer.getInstance(),
-				new Runnable() {
-					@Override
-					public void run() {
-						as.remove();
-						reward.playEffect(bloc.getLocation());
+		new BukkitRunnable() {
+			@Override
+			public void run() {
+				reward.spawnFirework(bloc.getLocation().clone().add(0, 0.5, 0));
 
-						if (respawn()) {
-							unspawnCrate(bloc);
-							PlayerExplore.removeUse(bloc);
-						}
-					}
-				}, 60);
-	}
+				if (respawn())
+					unspawnCrate(bloc);
 
-	private ArmorStand createArmorStand(Block block, double gain) {
-		Location loc = block.getLocation().clone();
-		ArmorStand as = (ArmorStand) loc.getWorld().spawnEntity(loc.add(0.5, -1.75, 0.5), EntityType.ARMOR_STAND);
-
-		as.setCustomName(ChatColor.GOLD + "+ " + gain);
-		as.setCustomNameVisible(true);
-		as.setVisible(false);
-		as.setGravity(false);
-
-		new AnimArmorStand(as).runTaskTimerAsynchronously(CratesExplorer.getInstance(), 0, 1);
-
-		return as;
-	}
-
-	@Override
-	public void spawnCrates(int amount) {
-		Set<Object> randomContainers = new HashSet<Object>();
-		Set<Object> copyContainers = new HashSet<Object>(crates);
-		Random r = new Random();
-
-		while (randomContainers.size() < amount && copyContainers.size() > 0) {
-			BlockState block = (BlockState) copyContainers.toArray()[r.nextInt(copyContainers.size())];
-
-			copyContainers.remove(block);
-			randomContainers.add(block);
-		}
-
-		spawnCrates(randomContainers);
-	}
-
-	@Override
-	public void spawnRandomCrates() {
-		spawnCrates((int) Math.round(super.pourcent * crates.size()));
-	}
-
-	@Override
-	public void spawnAllCrates() {
-		spawnCrates(crates);
+				PlayerExplore.removeUse(bloc);
+			}
+		}.runTaskLater(CratesExplorer.getInstance(), 60);
 	}
 
 	@Override
 	public void unspawnCrates() {
 		for (Object block : crates) {
+			if (PlayerExplore.isInUse(block))
+				return;
 			unspawnCrate(((BlockState) block).getBlock());
 		}
 	}
 
 	public void spawnCrates(Set<Object> blocks) {
 		// Play Animation
-		if (hasEffect()) {
-			Bukkit.getServer().getScheduler().runTaskAsynchronously(CratesExplorer.getInstance(), new Runnable() {
+		if (hasEffect())
+			new BukkitRunnable() {
 				@Override
 				public void run() {
-					for (Object block : blocks) {
+					for (Object block : blocks)
 						((BlockState) block).getLocation().getWorld().spigot().playEffect(
-								((BlockState) block).getLocation().add(0, 0.5, 0), effect, 0, 0, 0.1F, 0.1F, 0.1F,
-								0.5F, 20, 30);
-					}
+								((BlockState) block).getLocation().add(-0.5, 0.5, -0.5), effect, 0, 0, 0.1F, 0.1F, 0.1F, 0.5F,
+								20, 30);
 				}
-			});
-		}
+			}.runTaskAsynchronously(CratesExplorer.getInstance());
 
 		// Spawn ShowCase
-		Bukkit.getServer().getScheduler().runTaskLater(CratesExplorer.getInstance(), new Runnable() {
+		new BukkitRunnable() {
 			@Override
 			public void run() {
 				for (Object block : blocks)
 					((BlockState) block).update(true);
 			}
-		}, 12);
+		}.runTaskLater(CratesExplorer.getInstance(), 12L);
 	}
 
 	public void unspawnCrate(Block crate) {

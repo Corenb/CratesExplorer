@@ -31,16 +31,16 @@ import eu.horyzon.cratesexplorer.objects.rewardstype.CurrencyReward;
 import eu.horyzon.cratesexplorer.objects.rewardstype.Reward;
 import eu.horyzon.currencydispenser.CurrencyManager;
 
-public class FileManager {
-	File f;
-	FilenameFilter filter = new FilenameFilter() {
+public class FileUtils {
+	protected File f;
+	private FilenameFilter filter = new FilenameFilter() {
 		@Override
 		public boolean accept(File dir, String name) {
 			return !name.contains(".");
 		}
 	};
 
-	public FileManager(File f) {
+	public FileUtils(File f) {
 		this.f = f;
 	}
 
@@ -93,7 +93,11 @@ public class FileManager {
 				new ContainerCrates(c.getName(), material, useTime, spawnTime, pourcentSpawn, effect, sound,
 						crates, rewards);
 			} else if (material.equals(Material.ARMOR_STAND)){
-				Set<Object> armorstands = new HashSet<Object>(config.getList("crates"));
+				Set<Object> armorstands = new HashSet<Object>();
+
+				for (String locStr : config.getStringList("crates")) {
+					armorstands.add(new ArmorStandObject(locStr.split(":")));
+				}
 
 				new ArmorstandCrates(c.getName(), material, useTime, spawnTime, pourcentSpawn, effect, sound, armorstands, rewards);
 			}
@@ -155,7 +159,7 @@ public class FileManager {
 		return fireworks;
 	}
 
-	public static void addLocation(File f, Object crate) {
+	public static void addCrate(File f, Object crate) {
 		YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
 		List<Object> locList = new ArrayList<Object>(config.getList("crates"));
 
@@ -167,7 +171,7 @@ public class FileManager {
 		}
 	}
 
-	public static void removeLocation(File f, Object crate) {
+	public static void removeCrate(File f, Object crate) {
 		YamlConfiguration config = YamlConfiguration.loadConfiguration(f);
 		List<Object> locList = new ArrayList<Object>(config.getList("crates"));
 

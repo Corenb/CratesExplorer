@@ -1,7 +1,9 @@
 package eu.horyzon.cratesexplorer.objects.cratestype;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -22,16 +24,17 @@ public abstract class Crates {
 	protected Material material;
 	protected Set<Reward> rewards;
 	protected Set<Object> crates;
-	protected Map<UUID, Long> repeat;
+	protected Map<UUID, Long> repeat = new HashMap<UUID, Long>();
 	protected Sound sound;
 	protected boolean run = false;
-	protected boolean unspawnAfterUse;
 
 	public static Set<Crates> cratesList = new HashSet<Crates>();
 
-	public void start() throws IllegalStateException {
+	public void start() throws IllegalStateException, IllegalArgumentException {
 		if (run)
 			throw new IllegalStateException("Task already started");
+		else if (stay())
+			throw new IllegalArgumentException("Can't start task to immobile crate");
 
 		run = true;
 		respawnCrates();
@@ -96,17 +99,17 @@ public abstract class Crates {
 	}
 
 	public Boolean respawn() {
-		return useTime == -1;
+		return spawnTime < 0;
+	}
+
+	public Boolean stay() {
+		return spawnTime == 0;
 	}
 
 	public void respawnCrates() {
 		unspawnCrates();
 		spawnRandomCrates();
 		last = System.currentTimeMillis();
-	}
-
-	public Boolean isCrates(Object crate) {
-		return crates.contains(crate);
 	}
 
 	protected Reward getReward() throws NullPointerException {
@@ -133,17 +136,38 @@ public abstract class Crates {
 		return PlayerModify.modify.containsValue(id);
 	}
 
+	public void spawnRandomCrates() {
+		spawnCrates((int) Math.round(pourcent * crates.size()));
+	}
+
+	public void spawnAllCrates() {
+		spawnCrates(crates.size());
+	}
+
+	public void spawnCrates(int amount) {
+		Set<Object> randomCrates = new HashSet<Object>();
+		Set<Object> copyCrates = new HashSet<Object>(crates);
+		Random r = new Random();
+
+		while (randomCrates.size() < amount && copyCrates.size() > 0) {
+			Object crate = copyCrates.toArray()[r.nextInt(copyCrates.size())];
+
+			copyCrates.remove(crate);
+			randomCrates.add(crate);
+		}
+
+		spawnCrates(randomCrates);
+	}
+
 	public abstract boolean addCrate(Object crate);
 
 	public abstract boolean removeCrate(Object crate);
 
-	public abstract Boolean isSpawned(Object crate);
+	public abstract boolean isSpawned(Object crate);
 
-	public abstract void spawnCrates(int amount);
+	public abstract boolean isCrate(Object crate);
 
-	public abstract void spawnRandomCrates();
-
-	public abstract void spawnAllCrates();
+	public abstract void spawnCrates(Set<Object> crate);
 
 	public abstract void unspawnCrates();
 

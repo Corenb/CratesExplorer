@@ -2,7 +2,6 @@ package eu.horyzon.cratesexplorer;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 import org.bukkit.configuration.Configuration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -12,7 +11,7 @@ import eu.horyzon.cratesexplorer.listeners.PlayerExplore;
 import eu.horyzon.cratesexplorer.listeners.PlayerModify;
 import eu.horyzon.cratesexplorer.objects.cratestype.Crates;
 import eu.horyzon.cratesexplorer.tasks.CrateTask;
-import eu.horyzon.cratesexplorer.utils.FileManager;
+import eu.horyzon.cratesexplorer.utils.FileUtils;
 
 public class CratesExplorer extends JavaPlugin {
 	public static CrateTask task;
@@ -28,15 +27,13 @@ public class CratesExplorer extends JavaPlugin {
 				.asList(new File(getDataFolder(), "containers"), new File(getDataFolder(), "armorstands")).toArray();
 
 		for (File dir : dirs) {
-			new FileManager(dir).setup();
+			new FileUtils(dir).setup();
 		}
 
 		Configuration config = getConfig();
 
 		if (config.getBoolean("debug", false)) {
-			Logger log = getLogger();
-
-			log.info(Crates.cratesList.size() + " differents crates registered");
+			getLogger().info(Crates.cratesList.size() + " differents crates registered");
 
 			getCommand("cratesexplorer").setExecutor(new Commands());
 
