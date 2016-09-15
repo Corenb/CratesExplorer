@@ -15,7 +15,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import eu.horyzon.cratesexplorer.CratesExplorer;
 import eu.horyzon.cratesexplorer.listeners.PlayerExplore;
 import eu.horyzon.cratesexplorer.objects.rewardstype.Reward;
-import eu.horyzon.cratesexplorer.utils.AnimationUtils;
+import eu.horyzon.cratesexplorer.tasks.AnimationPlay;
 import eu.horyzon.cratesexplorer.utils.ChestUtils;
 import eu.horyzon.cratesexplorer.utils.FileUtils;
 
@@ -44,23 +44,24 @@ public class ContainerCrates extends Crates {
 	}
 
 	@Override
-	public boolean addCrate(Object crate) {
-		boolean added = crates.add(crate);
-
-		if (added)
+	public boolean addCrate(Object crate) throws IllegalArgumentException {
+		if (!crates.contains(crate)){
+			crates.add(crate);
 			FileUtils.addCrate(new File(dir, id), parseLoc(((BlockState) crate)));
+			return true;
+		}
 
-		return added;
+		throw new IllegalArgumentException();
 	}
 
 	@Override
-	public boolean removeCrate(Object crate) {
-		boolean removed = crates.remove(crate);
-
-		if (removed)
+	public boolean removeCrate(Object crate) throws IllegalArgumentException {
+		if (crates.remove(crate)) {
 			FileUtils.removeCrate(new File(dir, id), parseLoc((BlockState) crate));
+			return true;
+		}
 
-		return removed;
+		throw new IllegalArgumentException();
 	}
 
 	private static String parseLoc(BlockState container) {
@@ -94,7 +95,7 @@ public class ContainerCrates extends Crates {
 
 		ChestUtils.openChest(bloc, 30);
 		reward.giveReward(p);
-		AnimationUtils.createArmorStand(bloc.getLocation(), reward.getAmount());
+		new AnimationPlay(this, reward, bloc.getLocation().clone(), 0, 35, 60);
 
 		new BukkitRunnable() {
 			@Override
@@ -111,7 +112,7 @@ public class ContainerCrates extends Crates {
 
 	@Override
 	public void unspawnCrates() {
-		for (Object block : crates) {
+		for (Object block : getCrates()) {
 			if (PlayerExplore.isInUse(block))
 				return;
 			unspawnCrate(((BlockState) block).getBlock());

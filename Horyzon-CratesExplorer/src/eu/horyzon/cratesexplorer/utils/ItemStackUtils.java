@@ -1,55 +1,66 @@
 package eu.horyzon.cratesexplorer.utils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import org.apache.commons.lang.StringUtils;
-import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.material.MaterialData;
+import org.bukkit.util.io.BukkitObjectInputStream;
+import org.bukkit.util.io.BukkitObjectOutputStream;
+import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 public final class ItemStackUtils {
-	public static String getEnchants(ItemStack i) {
+	/*public static String getEnchants(ItemStack i) {
 		List<String> e = new ArrayList<String>();
 		Map<Enchantment, Integer> en = i.getEnchantments();
 		for (Enchantment t : en.keySet()) {
 			e.add(t.getName() + "%" + en.get(t));
 		}
 		return StringUtils.join(e, ",");
-	}
+	}*/
 
-	@SuppressWarnings("deprecation")
+	//@SuppressWarnings("deprecation")
 	public static String deserialize(ItemStack i) {
-		if (i == null)
+		try {
+			return itemStackToBase64(i);
+		} catch (IllegalStateException | ClassNotFoundException | IOException e) {
+			return null;
+		}
+		/*if (i == null)
 			return null;
 
 		String[] parts = new String[6];
 		parts[0] = i.getType().name();
 		parts[1] = Integer.toString(i.getAmount());
 		parts[2] = String.valueOf(i.getDurability());
-		parts[3] = i.getItemMeta() != null ? i.getItemMeta().getDisplayName() : null;
+		parts[3] = i.getItemMeta() != null ? serializeIntoFormattingCodes(i.getItemMeta()) : null;
 		parts[4] = String.valueOf(i.getData().getData());
 		parts[5] = getEnchants(i);
+		if (i.getType().equals(Material.SKULL_ITEM)) {
 
-		return StringUtils.join(parts, ";");
+		}
 
+		return StringUtils.join(parts, ";");*/
 	}
 
-	@SuppressWarnings("deprecation")
-	public static ItemStack deserial(String p) {
-		if (p.equalsIgnoreCase("null"))
+	//@SuppressWarnings("deprecation")
+	public static ItemStack serialize(String d) {
+		try {
+			return deserializeItemStack(d);
+		} catch (IOException e) {
+			return null;
+		}
+		/*if (p.equals(null))
 			return null;
 
 		String[] a = p.split(";");
 		ItemStack i = new ItemStack(Material.getMaterial(a[0]), Integer.parseInt(a[1]));
-		if (i.getType().equals(Material.AIR))
-			return null;
 		i.setDurability((short) Integer.parseInt(a[2]));
-		ItemMeta meta = i.getItemMeta();
-		meta.setDisplayName("" + a[3]);
-		i.setItemMeta(meta);
+
+		if (i.getType().equals(Material.AIR))
+			return i;
+
+		i.setItemMeta(deserializeFromFormattingCodes(a[3]));
 		MaterialData data = i.getData();
 		data.setData((byte) Integer.parseInt(a[4]));
 		i.setData(data);
@@ -71,7 +82,37 @@ public final class ItemStackUtils {
 				i.addEnchantment(type, f);
 			}
 		}
+		return i;*/
+	}
 
-		return i;
+	public static ItemStack deserializeItemStack(String data) throws IOException {
+		ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(data));
+		try {
+			BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
+			ItemStack items = (ItemStack) dataInput.readObject();
+
+			dataInput.close();
+			return items;
+		} catch (ClassNotFoundException e) {
+			throw new IOException("Unable to decode class type.", e);
+		} finally {
+			inputStream.close();
+		}
+	}
+
+	public static String itemStackToBase64(ItemStack items) throws IllegalStateException, ClassNotFoundException, IOException {
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		try {
+			BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
+
+			dataOutput.writeObject(items);
+
+			dataOutput.close();
+			return Base64Coder.encodeLines(outputStream.toByteArray());
+		} catch (Exception e) {
+			throw new IllegalStateException("Unable to save itemstack.", e);
+		} finally {
+			outputStream.close();
+		}
 	}
 }

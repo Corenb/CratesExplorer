@@ -5,9 +5,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 import eu.horyzon.cratesexplorer.CratesExplorer;
 import eu.horyzon.cratesexplorer.objects.cratestype.Crates;
 
-public class CrateTask extends BukkitRunnable {
+public class CrateSpawn extends BukkitRunnable {
 
-	public CrateTask(CratesExplorer plugin) {
+	public CrateSpawn(CratesExplorer plugin) {
 		runTaskTimer(plugin, 0, 20);
 	}
 

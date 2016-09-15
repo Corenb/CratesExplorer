@@ -13,9 +13,9 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import eu.horyzon.cratesexplorer.CratesExplorer;
 import eu.horyzon.cratesexplorer.listeners.PlayerExplore;
+import eu.horyzon.cratesexplorer.objects.ArmorStandObject;
 import eu.horyzon.cratesexplorer.objects.rewardstype.Reward;
-import eu.horyzon.cratesexplorer.utils.AnimationUtils;
-import eu.horyzon.cratesexplorer.utils.ArmorStandObject;
+import eu.horyzon.cratesexplorer.tasks.AnimationPlay;
 import eu.horyzon.cratesexplorer.utils.FileUtils;
 
 public class ArmorstandCrates extends Crates {
@@ -63,23 +63,24 @@ public class ArmorstandCrates extends Crates {
 		ArmorStandObject crate = null;
 		try {
 			crate = getCrate((ArmorStand) as);
+
+			FileUtils.removeCrate(new File(dir, id), crate.deserialize());
+			crates.remove(crate);
+
+			return true;
 		} catch (NullPointerException e) {
 			return false;
 		}
-
-		FileUtils.removeCrate(new File(dir, id), crate.deserialize());
-		crates.remove(crate);
-
-		return true;
 	}
 
 	@Override
-	public boolean isCrate(Object crate) {
-		try {
-			return crates.contains(getCrate((ArmorStand) crate));
-		} catch (NullPointerException e) {
-			return false;
+	public boolean isCrate(Object as) {
+		for (Object crate : crates) {
+			if(((ArmorStandObject) crate).isArmorstand((ArmorStand) as))
+				return true;
 		}
+
+		return false;
 	}
 
 	private ArmorStandObject getCrate(ArmorStand as) throws NullPointerException {
@@ -142,7 +143,7 @@ public class ArmorstandCrates extends Crates {
 			p.playSound(armorstand.getLocation(), sound, 20, 20);
 
 		reward.giveReward(p);
-		AnimationUtils.createArmorStand(loc.clone().add(0, -0.4, 0), reward.getAmount());
+		new AnimationPlay(this, reward, loc.clone().add(0, -0.4, 0), 0, 35, 60);
 
 		new BukkitRunnable() {
 			@Override

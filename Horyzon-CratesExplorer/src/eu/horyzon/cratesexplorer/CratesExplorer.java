@@ -10,11 +10,11 @@ import eu.horyzon.cratesexplorer.commands.Commands;
 import eu.horyzon.cratesexplorer.listeners.PlayerExplore;
 import eu.horyzon.cratesexplorer.listeners.PlayerModify;
 import eu.horyzon.cratesexplorer.objects.cratestype.Crates;
-import eu.horyzon.cratesexplorer.tasks.CrateTask;
+import eu.horyzon.cratesexplorer.tasks.CrateSpawn;
 import eu.horyzon.cratesexplorer.utils.FileUtils;
 
 public class CratesExplorer extends JavaPlugin {
-	public static CrateTask task;
+	public static CrateSpawn task;
 	private static CratesExplorer instance;
 
 	public void onEnable() {
@@ -26,9 +26,8 @@ public class CratesExplorer extends JavaPlugin {
 		File[] dirs = (File[]) Arrays
 				.asList(new File(getDataFolder(), "containers"), new File(getDataFolder(), "armorstands")).toArray();
 
-		for (File dir : dirs) {
-			new FileUtils(dir).setup();
-		}
+		for (File dir : dirs)
+			FileUtils.setup(dir);
 
 		Configuration config = getConfig();
 
@@ -42,7 +41,7 @@ public class CratesExplorer extends JavaPlugin {
 
 		getServer().getPluginManager().registerEvents(new PlayerExplore(), this);
 
-		task = new CrateTask(this);
+		task = new CrateSpawn(this);
 	}
 
 	public void onDisable() {
