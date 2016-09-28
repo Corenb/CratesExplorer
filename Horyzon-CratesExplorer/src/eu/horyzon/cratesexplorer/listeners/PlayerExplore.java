@@ -5,79 +5,76 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.bukkit.block.Block;
-import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.material.DirectionalContainer;
 
-import eu.horyzon.cratesexplorer.objects.cratestype.ArmorstandCrates;
-import eu.horyzon.cratesexplorer.objects.cratestype.ContainerCrates;
-import eu.horyzon.cratesexplorer.objects.cratestype.Crates;
+import eu.horyzon.cratesexplorer.objects.cratestype.Crate;
+import eu.horyzon.cratesexplorer.objects.cratestype.RunnableCrate;
 
 public class PlayerExplore implements Listener {
 	private static Map<Object, UUID> inUse = new HashMap<Object, UUID>();
 
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent e) {
-		Block bloc = e.getClickedBlock();
-
-		if (bloc == null || !(bloc.getState().getData() instanceof DirectionalContainer)
-				|| !e.getAction().equals(Action.RIGHT_CLICK_BLOCK))
+		if (!e.getAction().equals(Action.RIGHT_CLICK_BLOCK) || e.getClickedBlock() == null)
 			return;
 
-		Player p = e.getPlayer();
+		Block bloc = e.getClickedBlock();
 
-		for (Crates crate : Crates.cratesList) {
-			if (!(crate instanceof ContainerCrates) || !crate.isCrate(bloc.getState()))
-				continue;
+		try {
+			RunnableCrate crate = (RunnableCrate) Crate.getCratesfromCrate(bloc.getState());
 
-			if (crate.isModifyMode())
+			if (crate.isModify())
 				return;
 
-			e.setCancelled(true);
+			Player p = e.getPlayer();
 
-			if (crate.respawn()) {
+			if (!crate.isPermanent())
 				if (inUse.containsKey(bloc))
 					return;
 				else
 					inUse.put(bloc, p.getUniqueId());
-			}
 
-			crate.playAnimation(bloc, p);
-			break;
+			crate.open(bloc, p);
+			e.setCancelled(true);
+		} catch (NullPointerException ex) {
 		}
 	}
 
 	@EventHandler
 	public void onPlayerInteractEntity(PlayerInteractAtEntityEvent e) {
-		if (!(e.getRightClicked() instanceof ArmorStand))
-			return;
+		try {
+			Entity en = e.getRightClicked();
+			RunnableCrate crate = (RunnableCrate) Crate.getCratesfromCrate(en.getUniqueId());
 
-		Player p = e.getPlayer();
-		ArmorStand as = (ArmorStand) e.getRightClicked();
-
-		for (Crates crate : Crates.cratesList) {
-			if (!(crate instanceof ArmorstandCrates) || !crate.isCrate(as))
-				continue;
-
-			if (crate.isModifyMode())
+			if (crate.isModify())
 				return;
 
-			e.setCancelled(true);
+			Player p = e.getPlayer();
 
-			if (crate.respawn()) {
-				if (inUse.containsKey(as))
+			if (!crate.isPermanent())
+				if (inUse.containsKey(en.getUniqueId()))
 					return;
 				else
-					inUse.put(as, p.getUniqueId());
-			}
+					inUse.put(en.getUniqueId(), p.getUniqueId());
 
-			crate.playAnimation(as, p);
-			break;
+			crate.open(en, p);
+			e.setCancelled(true);
+		} catch (NullPointerException ex) {
+		}
+	}
+
+	@EventHandler
+	public void onEntityDeath(EntityDeathEvent e) {
+		try {
+			Crate.getCratesfromCrate(e.getEntity()).removeCrate(e.getEntity().getUniqueId());
+		} catch (NullPointerException ex) {
 		}
 	}
 

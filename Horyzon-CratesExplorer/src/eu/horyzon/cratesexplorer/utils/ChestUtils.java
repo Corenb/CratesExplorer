@@ -61,12 +61,12 @@ public class ChestUtils {
 		}
 	}
 
-	public static void openChest(Block bloc, double radius) {
+	public static void setChest(Block bloc, boolean open, double radius) {
 		double d = radius * radius;
 
 		for (Player player : bloc.getWorld().getPlayers()) {
 			if (player.getLocation().add(0.0D, 0.85D, 0.0D).distanceSquared(bloc.getLocation()) <= d)
-				setChest(player, 1, bloc);
+				setChest(player, open ? 1 : 0, bloc);
 		}
 	}
 }

@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,7 +11,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-import eu.horyzon.cratesexplorer.objects.cratestype.Crates;
+import eu.horyzon.cratesexplorer.objects.cratestype.Crate;
 import net.md_5.bungee.api.ChatColor;
 
 public class PlayerModify implements Listener {
@@ -22,12 +21,12 @@ public class PlayerModify implements Listener {
 	public void onPlayerInteract(PlayerInteractEvent e) {
 		Player p = e.getPlayer();
 
-		if(!modify.containsKey(p.getUniqueId()) || e.getAction().equals(Action.PHYSICAL) || !e.getAction().equals(Action.RIGHT_CLICK_BLOCK) || e.getClickedBlock() == null)
+		if(!modify.containsKey(p.getUniqueId()) || !e.getAction().equals(Action.RIGHT_CLICK_BLOCK) || e.getClickedBlock() == null)
 			return;
 
-		Crates c = Crates.getCrates(modify.get(p.getUniqueId()));
+		Crate c = Crate.getCratesfromId(modify.get(p.getUniqueId()));
 
-		if(!c.getMaterial().equals(e.getClickedBlock().getType()))
+		if(!c.getType().equals(e.getClickedBlock().getType()))
 			return;
 
 		if(p.isSneaking()) {
@@ -48,10 +47,13 @@ public class PlayerModify implements Listener {
 	public void onPlayerInteractEntity(PlayerInteractAtEntityEvent e) {
 		Player p = e.getPlayer();
 
-		if(!modify.containsKey(p.getUniqueId()) || !(e.getRightClicked() instanceof ArmorStand))
+		if(!modify.containsKey(p.getUniqueId()))
 			return;
 
-		Crates c = Crates.getCrates(modify.get(p.getUniqueId()));
+		Crate c = Crate.getCratesfromId(modify.get(p.getUniqueId()));
+
+		if (!c.getType().equals(e.getRightClicked().getType()))
+			return;
 
 		if(p.isSneaking()) {
 			if(c.removeCrate(e.getRightClicked()))
