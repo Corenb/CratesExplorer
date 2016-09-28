@@ -1,11 +1,7 @@
 #### GENERAL ####
-material: # MATERIAL NAME
-useTime: # TIME BETWEEN PLAYER CAN USE AGAIN CRATE, '0' FOR PLAYER CAN'T RE-USE, '-1' FOR PLAYER CAN USE ILLIMITY
-spawnTime: # TIME TO CRATE RESPAWN, '0' FOR STAY ALWAYS
-pourcentSpawn: # POURCENT OF CRATES TO SPAWN
+type: # ENTITY TYPE
 
 #### ANIMATIONS ####
-effect: # EFFECT ON SPAWN, 'none' FOR NO EFFECT
 sound: # SOUND TO PLAY ON PLAYER DISCOVER, 'none' FOR NO SOUND
 
 #### FIREWORKS ####
@@ -26,4 +22,4 @@ rewards:
 
 #### CRATES LIST ####
 crates:
-- world:x:y:z:arms:basePlat:small:visible:nameVisible:gravity:invulnerable::name:boots:chestPlate:helmet:leggins:hand:body:head:rightArm:leftArm:rightLeg:leftLeg
+- uuid
